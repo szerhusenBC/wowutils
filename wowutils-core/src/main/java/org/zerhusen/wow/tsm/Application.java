@@ -47,6 +47,7 @@ public class Application {
     }
 
     private static void printOutPriceStrings(Map<TSMPriceCategory, List<Long>> categoryPriceMap) {
+        System.out.println();
         categoryPriceMap.entrySet().forEach(entry -> {
             System.out.println(entry.getKey().name());
             System.out.println("==============================================================");
@@ -56,6 +57,7 @@ public class Application {
                     .collect(Collectors.joining(","));
 
             System.out.println(tsmImportString);
+            System.out.println();
         });
     }
 }

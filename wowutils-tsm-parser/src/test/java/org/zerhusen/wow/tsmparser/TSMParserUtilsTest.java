@@ -5,6 +5,7 @@ import org.junit.Test;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -57,7 +58,9 @@ public class TSMParserUtilsTest {
         InputStream resourceAsStream = TSMParserUtilsTest.class.getResourceAsStream("/phats_transmog_list.txt");
         try (BufferedReader br = new BufferedReader(new InputStreamReader(resourceAsStream))) {
             String tsmString = br.readLine();
-            assertThat(TSMParserUtils.parse(tsmString)).isNotNull();
+            List<Long> itemIds = TSMParserUtils.extractItemIds(tsmString);
+            assertThat(itemIds).isNotEmpty();
+            System.out.println(itemIds.size() + " itemIds extracted");
         }
     }
 
