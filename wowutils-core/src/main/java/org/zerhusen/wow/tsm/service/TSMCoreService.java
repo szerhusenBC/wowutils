@@ -13,24 +13,24 @@ import java.util.*;
  */
 public class TSMCoreService {
 
-    private static final String CSS_ELEMENT_SELECTOR = "table.table.table-condensed.table-hover tr:nth-of-type(2) td:nth-of-type(2)";
+    //    private static final String CSS_ELEMENT_SELECTOR = "table.table.table-condensed.table-hover tr:nth-of-type(2) td:nth-of-type(2)";
+    private static final String CSS_ELEMENT_SELECTOR = "table.htmltable .cur_g";
 
     public Map<TSMPriceCategory, List<Long>> getCategoryPriceMap(List<Long> itemIds) {
         final Map<TSMPriceCategory, List<Long>> priceCategoryMap = Collections.synchronizedMap(new HashMap<>());
 
-        itemIds.parallelStream()
-                .forEach(itemId -> {
-                    Integer marketPrice = requestMarketPrice(itemId);
-                    if (marketPrice == null) {
-                        System.out.println("couldn't request price for itemId " + itemId);
-                    } else {
-                        TSMPriceCategory priceCategory = Arrays.asList(TSMPriceCategory.values()).stream()
-                                .filter(category -> category.liesInCategory(marketPrice))
-                                .findAny()
-                                .orElse(null);
-                        addItemIdToMap(priceCategoryMap, itemId, marketPrice, priceCategory);
-                    }
-                });
+        itemIds.forEach(itemId -> {
+            Integer marketPrice = requestMarketPrice(itemId);
+            if (marketPrice == null) {
+                System.out.println("couldn't request price for itemId " + itemId);
+            } else {
+                TSMPriceCategory priceCategory = Arrays.asList(TSMPriceCategory.values()).stream()
+                        .filter(category -> category.liesInCategory(marketPrice))
+                        .findAny()
+                        .orElse(null);
+                addItemIdToMap(priceCategoryMap, itemId, marketPrice, priceCategory);
+            }
+        });
 
         return priceCategoryMap;
     }
@@ -47,10 +47,13 @@ public class TSMCoreService {
     }
 
     public Integer requestMarketPrice(long itemId) {
-
         try {
             String goldPriceAsString = requestPriceFromSite(itemId);
-            return Integer.valueOf(goldPriceAsString);
+            if (goldPriceAsString != null && !"".equals(goldPriceAsString)) {
+                return Integer.valueOf(goldPriceAsString);
+            } else {
+                return null;
+            }
         } catch (IOException e) {
             //do nothing
         }
@@ -61,14 +64,19 @@ public class TSMCoreService {
     String requestPriceFromSite(long itemId) throws IOException {
         System.out.println("TSMCoreService.requestPriceFromSite - requesting itemId " + itemId);
         long start = System.currentTimeMillis();
-        Document doc = Jsoup.connect("https://www.tradeskillmaster.com/items/" + itemId).get();
+        //Document doc = Jsoup.connect("https://www.tradeskillmaster.com/items/" + itemId).get();
+        Document doc = Jsoup.connect("http://www.wowuction.com/eu/azshara/horde/Items/Stats/" + itemId).get();
         long stop = System.currentTimeMillis();
         System.out.println("TSMCoreService.requestPriceFromSite - requested itemId " + itemId + " in " + (stop - start) + "ms");
 
         Elements myServerMaketValueElements = doc.select(CSS_ELEMENT_SELECTOR);
-        Element myServerMaketValueElement = myServerMaketValueElements.get(0);
+        if (myServerMaketValueElements.isEmpty()) {
+            return null;
+        } else {
+            Element myServerMaketValueElement = myServerMaketValueElements.get(0);
 
-        String marketPriceTextFromNode = myServerMaketValueElement.text();
-        return marketPriceTextFromNode.substring(0, marketPriceTextFromNode.indexOf('g')).replace(",", "");
+            String marketPriceTextFromNode = myServerMaketValueElement.text();
+            return marketPriceTextFromNode;
+        }
     }
 }
