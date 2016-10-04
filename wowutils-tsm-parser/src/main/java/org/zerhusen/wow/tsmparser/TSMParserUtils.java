@@ -3,7 +3,10 @@ package org.zerhusen.wow.tsmparser;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -46,6 +49,17 @@ public final class TSMParserUtils {
                     .collect(Collectors.toList());
         }
 
+    }
+
+    public static List<Long> extractItemIdsByRegex(String tsmString) {
+        List<String> itemIds = new ArrayList<>();
+        Matcher m = Pattern.compile("i:(\\d+)").matcher(tsmString);
+        while (m.find()) {
+            itemIds.add(m.group(1));
+        }
+        return itemIds.stream()
+                .map(itemIdString -> Long.valueOf(itemIdString))
+                .collect(Collectors.toList());
     }
 
     private static Long getItemIdAsLong(TSMParser.ItemContext itemContext) {
