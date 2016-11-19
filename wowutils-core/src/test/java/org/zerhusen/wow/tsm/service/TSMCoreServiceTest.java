@@ -3,6 +3,7 @@ package org.zerhusen.wow.tsm.service;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -15,24 +16,22 @@ import static org.mockito.Mockito.doReturn;
  */
 public class TSMCoreServiceTest {
     @Test
-    public void requestMarketPrice() throws Exception {
+    public void getCategoryPriceMap() throws Exception {
         TSMCoreService tsmCoreService = new TSMCoreService();
 
-        assertThat(tsmCoreService.requestMarketPrice(93501L)).isNotNull();
-        assertThat(tsmCoreService.requestMarketPrice(99999999L)).isNull();
-    }
+        List<WowItem> wowItems = new ArrayList<>();
+        WowItem item321 = new WowItem(321L, "item321", 265, 0.1D);
+        wowItems.add(item321);
+        WowItem item2453 = new WowItem(2453L, "item2453", 2065, 0.1D);
+        wowItems.add(item2453);
+        WowItem item2133 = new WowItem(2133L, "item2133", 2545, 0.1D);
+        wowItems.add(item2133);
+        WowItem item154811 = new WowItem(154811L, "item154811", 150320, 0.1D);
+        wowItems.add(item154811);
+        WowItem item49 = new WowItem(49L, "item49", 20, 0.1D);
+        wowItems.add(item49);
 
-    @Test
-    public void getCategoryPriceMap() throws Exception {
-        TSMCoreService tsmCoreService = Mockito.spy(TSMCoreService.class);
-
-        doReturn(321).when(tsmCoreService).requestMarketPrice(321L);
-        doReturn(2453).when(tsmCoreService).requestMarketPrice(2453L);
-        doReturn(2133).when(tsmCoreService).requestMarketPrice(2133L);
-        doReturn(154811).when(tsmCoreService).requestMarketPrice(154811L);
-        doReturn(49).when(tsmCoreService).requestMarketPrice(49L);
-
-        Map<TSMPriceCategory, List<Long>> categoryPriceMap = tsmCoreService.getCategoryPriceMap(Arrays.asList(321L, 2453L, 2133L, 154811L, 49L));
+        Map<TSMPriceCategory, List<WowItem>> categoryPriceMap = tsmCoreService.getCategoryPriceMap(wowItems);
 
         assertThat(categoryPriceMap.keySet())
                 .containsOnly(
@@ -42,10 +41,10 @@ public class TSMCoreServiceTest {
                         TSMPriceCategory.CATEGORY_150000_250000
                 );
 
-        assertThat(categoryPriceMap.get(TSMPriceCategory.CATEGORY_0_50)).containsOnly(49L);
-        assertThat(categoryPriceMap.get(TSMPriceCategory.CATEGORY_250_500)).containsOnly(321L);
-        assertThat(categoryPriceMap.get(TSMPriceCategory.CATEGORY_2000_3000)).containsOnly(2453L, 2133L);
-        assertThat(categoryPriceMap.get(TSMPriceCategory.CATEGORY_150000_250000)).containsOnly(154811L);
+        assertThat(categoryPriceMap.get(TSMPriceCategory.CATEGORY_0_50)).containsOnly(item49);
+        assertThat(categoryPriceMap.get(TSMPriceCategory.CATEGORY_250_500)).containsOnly(item321);
+        assertThat(categoryPriceMap.get(TSMPriceCategory.CATEGORY_2000_3000)).containsOnly(item2453, item2133);
+        assertThat(categoryPriceMap.get(TSMPriceCategory.CATEGORY_150000_250000)).containsOnly(item154811);
     }
 
 }

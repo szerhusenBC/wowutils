@@ -14,71 +14,96 @@ import java.util.stream.Collectors;
  */
 public class TSMCoreService {
 
-    //    private static final String CSS_ELEMENT_SELECTOR = "table.table.table-condensed.table-hover tr:nth-of-type(2) td:nth-of-type(2)";
-    private static final String CSS_ELEMENT_SELECTOR = "table.htmltable .cur_g";
+    private static final String CSS_SELECTOR_GOLD = "table.htmltable .cur_g";
+    private static final String CSS_SELECTOR_SPD_SERVER = "table.htmltable tr:nth-child(6) td:nth-child(2)";
+    private static final String CSS_SELECTOR_SPD_REGION = "table.htmltable tr:nth-child(6) td:nth-child(3)";
+    private static final String CSS_SELECTOR_NAME = ".ItemBare";
 
     private static final String WOW_AUCTION_URL = "http://www.wowuction.com/eu/azshara/horde/Items/Stats/";
 
-    public Map<TSMPriceCategory, List<Long>> getCategoryPriceMap(List<Long> itemIds) {
-        final Map<TSMPriceCategory, List<Long>> priceCategoryMap = Collections.synchronizedMap(new HashMap<>());
-
-        itemIds.parallelStream().forEach(itemId -> {
-            Integer marketPrice = requestMarketPrice(itemId);
-            if (marketPrice == null) {
-                System.out.println("couldn't request price for itemId " + itemId);
-            } else {
-                TSMPriceCategory priceCategory = Arrays.asList(TSMPriceCategory.values()).stream()
-                        .filter(category -> category.liesInCategory(marketPrice))
-                        .findAny()
-                        .orElse(null);
-                addItemIdToMap(priceCategoryMap, itemId, marketPrice, priceCategory);
-            }
-        });
-
-        return priceCategoryMap;
+    public List<WowItem> getWowItems(List<Long> itemIds) {
+        return itemIds.parallelStream()
+                .map(this::requestWowItemFromWowAuctionPage)
+                .collect(Collectors.toList());
     }
 
-    private void addItemIdToMap(Map<TSMPriceCategory, List<Long>> priceCategoryMap, Long itemId, Integer marketPrice, TSMPriceCategory priceCategory) {
-        if (priceCategory == null) {
-            System.out.println("couldn't find price category for itemId " + itemId + ", price: " + marketPrice);
-        } else {
-            if (!priceCategoryMap.containsKey(priceCategory)) {
-                priceCategoryMap.put(priceCategory, new ArrayList<>());
-            }
-            priceCategoryMap.get(priceCategory).add(itemId);
-        }
-    }
-
-    public Integer requestMarketPrice(long itemId) {
+    private WowItem requestWowItemFromWowAuctionPage(long itemId) {
         try {
-            String goldPriceAsString = requestPriceFromSite(itemId);
-            if (goldPriceAsString != null && !"".equals(goldPriceAsString)) {
-                return Integer.valueOf(goldPriceAsString);
+            System.out.println("TSMCoreService.requestPriceFromSite - requesting itemId " + itemId);
+            long start = System.currentTimeMillis();
+            Document doc = Jsoup.connect(WOW_AUCTION_URL + itemId).get();
+            long stop = System.currentTimeMillis();
+            System.out.println("TSMCoreService.requestPriceFromSite - requested itemId " + itemId + " in " + (stop - start) + "ms");
+
+            String itemName = getItemNameFromSite(doc);
+            Integer medianMarketPrice = getPriceFromSite(doc);
+            if (medianMarketPrice == null) {
+                return new WowItem(itemId, itemName);
             } else {
-                return null;
+                double estimatedSoldPerDay = getEstimatedSoldPerDayFromSite(doc);
+                return new WowItem(itemId, itemName, medianMarketPrice, estimatedSoldPerDay);
             }
         } catch (IOException e) {
-            //do nothing
+            System.out.println("error on requesting price for item " + itemId + ", reason: " + e.getMessage());
         }
 
         return null;
     }
 
-    String requestPriceFromSite(long itemId) throws IOException {
-        System.out.println("TSMCoreService.requestPriceFromSite - requesting itemId " + itemId);
-        long start = System.currentTimeMillis();
-        Document doc = Jsoup.connect(WOW_AUCTION_URL + itemId).get();
-        long stop = System.currentTimeMillis();
-        System.out.println("TSMCoreService.requestPriceFromSite - requested itemId " + itemId + " in " + (stop - start) + "ms");
+    private double getEstimatedSoldPerDayFromSite(Document doc) {
+        Elements serverElements = doc.select(CSS_SELECTOR_SPD_SERVER);
+        String text = serverElements.get(0).text();
+        if (text == null || "".equals(text)) {
+            Elements regionElements = doc.select(CSS_SELECTOR_SPD_REGION);
+            text = regionElements.get(0).text();
+        }
+        return Double.parseDouble(text);
+    }
 
-        Elements myServerMaketValueElements = doc.select(CSS_ELEMENT_SELECTOR);
+    private String getItemNameFromSite(Document doc) {
+        Elements nameElements = doc.select(CSS_SELECTOR_NAME);
+        return nameElements.get(0).text();
+    }
+
+    private Integer getPriceFromSite(Document doc) {
+        Elements myServerMaketValueElements = doc.select(CSS_SELECTOR_GOLD);
         if (myServerMaketValueElements.isEmpty()) {
             return null;
         } else {
             Element myServerMaketValueElement = myServerMaketValueElements.get(0);
 
             String marketPriceTextFromNode = myServerMaketValueElement.text();
-            return marketPriceTextFromNode;
+            return Integer.valueOf(marketPriceTextFromNode);
+        }
+    }
+
+    public Map<TSMPriceCategory, List<WowItem>> getCategoryPriceMap(List<WowItem> wowItems) {
+        final Map<TSMPriceCategory, List<WowItem>> priceCategoryMap = new HashMap<>();
+
+        wowItems.forEach(wowItem -> {
+            Integer marketPrice = wowItem.getMedianMarketPrice();
+            if (marketPrice == null) {
+                System.out.println("no price for wowItem " + wowItem);
+            } else {
+                TSMPriceCategory priceCategory = Arrays.asList(TSMPriceCategory.values()).stream()
+                        .filter(category -> category.liesInCategory(marketPrice))
+                        .findAny()
+                        .orElse(null);
+                addItemToMap(priceCategoryMap, wowItem, priceCategory);
+            }
+        });
+
+        return priceCategoryMap;
+    }
+
+    private void addItemToMap(Map<TSMPriceCategory, List<WowItem>> priceCategoryMap, WowItem wowItem, TSMPriceCategory priceCategory) {
+        if (priceCategory == null) {
+            System.out.println("couldn't find price category for itemId " + wowItem + ", price: " + wowItem.getMedianMarketPrice());
+        } else {
+            if (!priceCategoryMap.containsKey(priceCategory)) {
+                priceCategoryMap.put(priceCategory, new ArrayList<>());
+            }
+            priceCategoryMap.get(priceCategory).add(wowItem);
         }
     }
 }
