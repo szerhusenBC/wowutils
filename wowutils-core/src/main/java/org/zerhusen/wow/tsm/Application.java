@@ -2,6 +2,7 @@ package org.zerhusen.wow.tsm;
 
 import org.zerhusen.wow.tsm.service.TSMCoreService;
 import org.zerhusen.wow.tsm.service.TSMPriceCategory;
+import org.zerhusen.wow.tsmparser.SimpleTsmParser;
 import org.zerhusen.wow.tsmparser.TSMParserUtils;
 
 import java.io.BufferedReader;
@@ -24,7 +25,7 @@ public class Application {
             if (tsmString == null || "".equals(tsmString)) {
                 System.out.println("couldn't find TSM string in first line of file!");
             } else {
-                List<Long> itemIds = TSMParserUtils.extractItemIds(tsmString);
+                List<Long> itemIds = SimpleTsmParser.extractItemIds(tsmString);
 
                 TSMCoreService tsmCoreService = new TSMCoreService();
                 Map<TSMPriceCategory, List<Long>> categoryPriceMap = tsmCoreService.getCategoryPriceMap(itemIds);

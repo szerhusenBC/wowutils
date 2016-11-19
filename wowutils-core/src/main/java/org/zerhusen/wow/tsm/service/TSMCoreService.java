@@ -7,6 +7,7 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by stephan on 02.10.16.
@@ -16,10 +17,12 @@ public class TSMCoreService {
     //    private static final String CSS_ELEMENT_SELECTOR = "table.table.table-condensed.table-hover tr:nth-of-type(2) td:nth-of-type(2)";
     private static final String CSS_ELEMENT_SELECTOR = "table.htmltable .cur_g";
 
+    private static final String WOW_AUCTION_URL = "http://www.wowuction.com/eu/azshara/horde/Items/Stats/";
+
     public Map<TSMPriceCategory, List<Long>> getCategoryPriceMap(List<Long> itemIds) {
         final Map<TSMPriceCategory, List<Long>> priceCategoryMap = Collections.synchronizedMap(new HashMap<>());
 
-        itemIds.forEach(itemId -> {
+        itemIds.parallelStream().forEach(itemId -> {
             Integer marketPrice = requestMarketPrice(itemId);
             if (marketPrice == null) {
                 System.out.println("couldn't request price for itemId " + itemId);
@@ -64,8 +67,7 @@ public class TSMCoreService {
     String requestPriceFromSite(long itemId) throws IOException {
         System.out.println("TSMCoreService.requestPriceFromSite - requesting itemId " + itemId);
         long start = System.currentTimeMillis();
-        //Document doc = Jsoup.connect("https://www.tradeskillmaster.com/items/" + itemId).get();
-        Document doc = Jsoup.connect("http://www.wowuction.com/eu/azshara/horde/Items/Stats/" + itemId).get();
+        Document doc = Jsoup.connect(WOW_AUCTION_URL + itemId).get();
         long stop = System.currentTimeMillis();
         System.out.println("TSMCoreService.requestPriceFromSite - requested itemId " + itemId + " in " + (stop - start) + "ms");
 

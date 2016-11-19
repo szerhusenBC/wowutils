@@ -51,17 +51,6 @@ public final class TSMParserUtils {
 
     }
 
-    public static List<Long> extractItemIdsByRegex(String tsmString) {
-        List<String> itemIds = new ArrayList<>();
-        Matcher m = Pattern.compile("i:(\\d+)").matcher(tsmString);
-        while (m.find()) {
-            itemIds.add(m.group(1));
-        }
-        return itemIds.stream()
-                .map(itemIdString -> Long.valueOf(itemIdString))
-                .collect(Collectors.toList());
-    }
-
     private static Long getItemIdAsLong(TSMParser.ItemContext itemContext) {
         return Long.valueOf(itemContext.item_id().getText());
     }

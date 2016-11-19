@@ -65,17 +65,6 @@ public class TSMParserUtilsTest {
     }
 
     @Test
-    public void extractItemIdsByRegexAgainstPhatLewtsTransmogImportString() throws Exception {
-        InputStream resourceAsStream = TSMParserUtilsTest.class.getResourceAsStream("/phats_transmog_list.txt");
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(resourceAsStream))) {
-            String tsmString = br.readLine();
-            List<Long> itemIds = TSMParserUtils.extractItemIdsByRegex(tsmString);
-            assertThat(itemIds).hasSize(3056);
-            System.out.println(itemIds.size() + " itemIds extracted");
-        }
-    }
-
-    @Test
     public void extractItemIds() throws Exception {
         assertThat(TSMParserUtils.extractItemIds("i:123456"))
                 .containsOnly(123456L);
