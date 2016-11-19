@@ -29,7 +29,7 @@ public class Application {
                 List<Long> itemIds = SimpleTsmParser.extractItemIds(tsmString);
 
                 TSMCoreService tsmCoreService = new TSMCoreService();
-                List<WowItem> wowItems = tsmCoreService.getWowItems(itemIds);
+                List<WowItem> wowItems = tsmCoreService.requestWowItems(itemIds);
                 Map<TSMPriceCategory, List<WowItem>> categoryPriceMap = tsmCoreService.getCategoryPriceMap(wowItems);
 
                 final String rootPath = initRootPath();

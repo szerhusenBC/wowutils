@@ -21,10 +21,17 @@ public class TSMCoreService {
 
     private static final String WOW_AUCTION_URL = "http://www.wowuction.com/eu/azshara/horde/Items/Stats/";
 
-    public List<WowItem> getWowItems(List<Long> itemIds) {
-        return itemIds.stream()
+    public List<WowItem> requestWowItems(List<Long> itemIds) {
+        long start = System.currentTimeMillis();
+
+        List<WowItem> wowItems = itemIds.stream()
                 .map(this::requestWowItemFromWowAuctionPage)
                 .collect(Collectors.toList());
+
+        long duration = System.currentTimeMillis() - start;
+        System.out.println("requested " + wowItems.size() + " items in " + duration + "ms");
+
+        return wowItems;
     }
 
     private WowItem requestWowItemFromWowAuctionPage(long itemId) {
