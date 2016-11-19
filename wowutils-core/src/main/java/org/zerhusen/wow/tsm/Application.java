@@ -4,13 +4,8 @@ import org.zerhusen.wow.tsm.service.TSMCoreService;
 import org.zerhusen.wow.tsm.service.TSMPriceCategory;
 import org.zerhusen.wow.tsm.service.WowItem;
 import org.zerhusen.wow.tsmparser.SimpleTsmParser;
-import org.zerhusen.wow.tsmparser.TSMParserUtils;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.io.*;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,6 +14,8 @@ import java.util.stream.Collectors;
  * Created by stephan on 02.10.16.
  */
 public class Application {
+
+    private static final String SEPERATOR = ",";
 
     public static void main(String[] args) {
         if (args == null || args.length == 0) {
@@ -35,9 +32,60 @@ public class Application {
                 List<WowItem> wowItems = tsmCoreService.getWowItems(itemIds);
                 Map<TSMPriceCategory, List<WowItem>> categoryPriceMap = tsmCoreService.getCategoryPriceMap(wowItems);
 
-                printOutPriceStrings(categoryPriceMap);
+                final String rootPath = initRootPath();
+                try {
+                    generateItemListCSVFile(rootPath, categoryPriceMap);
+                } catch (IOException e) {
+                    System.out.println("couldn't write item list file, reason: " + e.getMessage());
+                }
+
+                try {
+                    generateTsmImportStringFile(rootPath, categoryPriceMap);
+                } catch (IOException e) {
+                    System.out.println("couldn't write TSM import string file, reason: " + e.getMessage());
+                }
             }
         }
+    }
+
+    private static String initRootPath() {
+        String rootPath = System.getProperty("user.home") + "/wowutils";
+        File rootDirectory = new File(rootPath);
+        if (!rootDirectory.exists()) {
+            rootDirectory.mkdir();
+        }
+        return rootPath;
+    }
+
+    private static void generateItemListCSVFile(String rootPath, Map<TSMPriceCategory, List<WowItem>> categoryPriceMap) throws IOException {
+        File csvFile = new File(rootPath + "/wowItemPrices.csv");
+        if (csvFile.exists()) {
+            csvFile.delete();
+        }
+
+        FileWriter fw = new FileWriter(csvFile.getAbsoluteFile());
+        try (BufferedWriter bw = new BufferedWriter(fw)) {
+            bw.write(getCsvContent(categoryPriceMap));
+        }
+    }
+
+    private static String getCsvContent(Map<TSMPriceCategory, List<WowItem>> categoryPriceMap) {
+        StringBuffer sb = new StringBuffer();
+
+        categoryPriceMap.entrySet().forEach(entry -> {
+            final String categoryLabel = entry.getKey().getLabel();
+            entry.getValue().stream()
+                    .filter(wowItem -> wowItem.getMedianMarketPrice() != null)
+                    .forEach(wowItem -> sb
+                            .append(wowItem.getItemId()).append(SEPERATOR)
+                            .append(wowItem.getName()).append(SEPERATOR)
+                            .append(wowItem.getMedianMarketPrice()).append(SEPERATOR)
+                            .append(wowItem.getEstimatedSoldPerDay()).append(SEPERATOR)
+                            .append(categoryLabel)
+                            .append("\n"));
+        });
+
+        return sb.toString();
     }
 
     private static String readStringFromFile(String filePath) {
@@ -52,18 +100,31 @@ public class Application {
         return null;
     }
 
-    private static void printOutPriceStrings(Map<TSMPriceCategory, List<WowItem>> categoryPriceMap) {
-        System.out.println();
+    private static void generateTsmImportStringFile(String rootPath, Map<TSMPriceCategory, List<WowItem>> categoryPriceMap) throws IOException {
+        File importStringFile = new File(rootPath + "/wowTSMImportString.txt");
+        if (importStringFile.exists()) {
+            importStringFile.delete();
+        }
+
+        FileWriter fw = new FileWriter(importStringFile.getAbsoluteFile());
+        try (BufferedWriter bw = new BufferedWriter(fw)) {
+            bw.write(getTsmImportStringContent(categoryPriceMap));
+        }
+    }
+
+    private static String getTsmImportStringContent(Map<TSMPriceCategory, List<WowItem>> categoryPriceMap) {
+        StringBuffer sb = new StringBuffer();
+
         categoryPriceMap.entrySet().forEach(entry -> {
-            System.out.println(entry.getKey().name());
-            System.out.println("==============================================================");
+            sb.append("group:").append(entry.getKey().getLabel()).append(SEPERATOR);
 
             String tsmImportString = entry.getValue().stream()
                     .map(wowItem -> "i:" + wowItem.getItemId())
-                    .collect(Collectors.joining(","));
+                    .collect(Collectors.joining(SEPERATOR));
 
-            System.out.println(tsmImportString);
-            System.out.println();
+            sb.append(tsmImportString).append(SEPERATOR);
         });
+
+        return sb.toString();
     }
 }
