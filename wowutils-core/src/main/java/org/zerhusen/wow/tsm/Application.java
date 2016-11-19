@@ -57,6 +57,18 @@ public class Application {
         return rootPath;
     }
 
+    private static String readStringFromFile(String filePath) {
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            // just read first line
+            return br.readLine();
+
+        } catch (IOException e) {
+            System.err.println("couldn't read file: " + e.getMessage());
+        }
+
+        return null;
+    }
+
     private static void generateItemListCSVFile(String rootPath, Map<TSMPriceCategory, List<WowItem>> categoryPriceMap) throws IOException {
         File csvFile = new File(rootPath + "/wowItemPrices.csv");
         if (csvFile.exists()) {
@@ -75,29 +87,26 @@ public class Application {
         categoryPriceMap.entrySet().forEach(entry -> {
             final String categoryLabel = entry.getKey().getLabel();
             entry.getValue().stream()
-                    .filter(wowItem -> wowItem.getMedianMarketPrice() != null)
-                    .forEach(wowItem -> sb
-                            .append(wowItem.getItemId()).append(SEPERATOR)
-                            .append(wowItem.getName()).append(SEPERATOR)
-                            .append(wowItem.getMedianMarketPrice()).append(SEPERATOR)
-                            .append(wowItem.getEstimatedSoldPerDay()).append(SEPERATOR)
-                            .append(categoryLabel)
-                            .append("\n"));
+                    .forEach(wowItem -> {
+                        sb
+                                .append(wowItem.getItemId()).append(SEPERATOR)
+                                .append(wowItem.getName()).append(SEPERATOR);
+
+                        if (wowItem.getMedianMarketPrice() != null) {
+                            sb.append(wowItem.getMedianMarketPrice());
+                        }
+                        sb.append(SEPERATOR);
+
+                        if (wowItem.getEstimatedSoldPerDay() != null) {
+                            sb.append(wowItem.getEstimatedSoldPerDay());
+                        }
+                        sb.append(SEPERATOR);
+
+                        sb.append(categoryLabel).append("\n");
+                    });
         });
 
         return sb.toString();
-    }
-
-    private static String readStringFromFile(String filePath) {
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            // just read first line
-            return br.readLine();
-
-        } catch (IOException e) {
-            System.err.println("couldn't read file: " + e.getMessage());
-        }
-
-        return null;
     }
 
     private static void generateTsmImportStringFile(String rootPath, Map<TSMPriceCategory, List<WowItem>> categoryPriceMap) throws IOException {

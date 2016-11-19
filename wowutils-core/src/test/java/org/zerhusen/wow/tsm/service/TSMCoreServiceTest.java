@@ -30,6 +30,8 @@ public class TSMCoreServiceTest {
         wowItems.add(item154811);
         WowItem item49 = new WowItem(49L, "item49", 20, 0.1D);
         wowItems.add(item49);
+        WowItem item4711 = new WowItem(4711L, "item4711");
+        wowItems.add(item4711);
 
         Map<TSMPriceCategory, List<WowItem>> categoryPriceMap = tsmCoreService.getCategoryPriceMap(wowItems);
 
@@ -38,13 +40,15 @@ public class TSMCoreServiceTest {
                         TSMPriceCategory.CATEGORY_0_50,
                         TSMPriceCategory.CATEGORY_250_500,
                         TSMPriceCategory.CATEGORY_2000_3000,
-                        TSMPriceCategory.CATEGORY_150000_250000
+                        TSMPriceCategory.CATEGORY_150000_250000,
+                        TSMPriceCategory.CATEGORY_DIVERSE
                 );
 
         assertThat(categoryPriceMap.get(TSMPriceCategory.CATEGORY_0_50)).containsOnly(item49);
         assertThat(categoryPriceMap.get(TSMPriceCategory.CATEGORY_250_500)).containsOnly(item321);
         assertThat(categoryPriceMap.get(TSMPriceCategory.CATEGORY_2000_3000)).containsOnly(item2453, item2133);
         assertThat(categoryPriceMap.get(TSMPriceCategory.CATEGORY_150000_250000)).containsOnly(item154811);
+        assertThat(categoryPriceMap.get(TSMPriceCategory.CATEGORY_DIVERSE)).containsOnly(item4711);
     }
 
 }

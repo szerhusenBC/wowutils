@@ -22,7 +22,7 @@ public class TSMCoreService {
     private static final String WOW_AUCTION_URL = "http://www.wowuction.com/eu/azshara/horde/Items/Stats/";
 
     public List<WowItem> getWowItems(List<Long> itemIds) {
-        return itemIds.parallelStream()
+        return itemIds.stream()
                 .map(this::requestWowItemFromWowAuctionPage)
                 .collect(Collectors.toList());
     }
@@ -47,7 +47,7 @@ public class TSMCoreService {
             System.out.println("error on requesting price for item " + itemId + ", reason: " + e.getMessage());
         }
 
-        return null;
+        return new WowItem(itemId, "error on requesting item");
     }
 
     private double getEstimatedSoldPerDayFromSite(Document doc) {
@@ -83,7 +83,7 @@ public class TSMCoreService {
         wowItems.forEach(wowItem -> {
             Integer marketPrice = wowItem.getMedianMarketPrice();
             if (marketPrice == null) {
-                System.out.println("no price for wowItem " + wowItem);
+                addItemToMap(priceCategoryMap, wowItem, TSMPriceCategory.CATEGORY_DIVERSE);
             } else {
                 TSMPriceCategory priceCategory = Arrays.asList(TSMPriceCategory.values()).stream()
                         .filter(category -> category.liesInCategory(marketPrice))
