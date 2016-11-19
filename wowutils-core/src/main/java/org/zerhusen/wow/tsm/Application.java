@@ -20,8 +20,6 @@ import java.util.stream.Collectors;
  */
 public class Application {
 
-    private static final List<WowItem> WOW_ITEMS = Collections.synchronizedList(new ArrayList<>());
-
     public static void main(String[] args) {
         if (args == null || args.length == 0) {
             System.out.println("please specify path to file with TSM import string!");
