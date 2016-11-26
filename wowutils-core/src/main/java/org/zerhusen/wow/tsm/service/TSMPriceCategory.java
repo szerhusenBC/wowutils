@@ -7,7 +7,7 @@ public enum TSMPriceCategory {
 
     CATEGORY_0_50("A - 0g-50g", 0, 50),
     CATEGORY_50_100("B - 50g-100g", 50, 100),
-    CATEGORY_100_250("C - 1000g-250g", 100, 250),
+    CATEGORY_100_250("C - 100g-250g", 100, 250),
     CATEGORY_250_500("D - 250g-500g", 250, 500),
     CATEGORY_500_775("E - 500g-775g", 500, 775),
     CATEGORY_775_1000("F - 775g-1000g", 775, 1000),
