@@ -1,5 +1,7 @@
 package org.zerhusen.wow.tsmparser;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 import java.io.BufferedReader;
@@ -14,6 +16,8 @@ import static org.assertj.core.api.Assertions.fail;
  * Created by stephan on 02.10.16.
  */
 public class TSMParserUtilsTest {
+
+    private static final Logger LOGGER = LogManager.getLogger(TSMParserUtilsTest.class);
 
     @Test
     public void parse() throws Exception {
@@ -60,7 +64,7 @@ public class TSMParserUtilsTest {
             String tsmString = br.readLine();
             List<Long> itemIds = TSMParserUtils.extractItemIds(tsmString);
             assertThat(itemIds).hasSize(3056);
-            System.out.println(itemIds.size() + " itemIds extracted");
+            LOGGER.info(itemIds.size() + " itemIds extracted");
         }
     }
 

@@ -1,9 +1,12 @@
 package org.zerhusen.wow.tsm.service;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.zerhusen.wow.tsm.cache.WowItemCache;
 
 import java.io.IOException;
 import java.util.*;
@@ -13,6 +16,8 @@ import java.util.stream.Collectors;
  * Created by stephan on 02.10.16.
  */
 public class TSMCoreService {
+
+    private static final Logger LOGGER = LogManager.getLogger(TSMCoreService.class);
 
     private static final String CSS_SELECTOR_GOLD = "table.htmltable .cur_g";
     private static final String CSS_SELECTOR_SPD_SERVER = "table.htmltable tr:nth-child(6) td:nth-child(2)";
@@ -29,18 +34,18 @@ public class TSMCoreService {
                 .collect(Collectors.toList());
 
         long duration = System.currentTimeMillis() - start;
-        System.out.println("requested " + wowItems.size() + " items in " + duration + "ms");
+        LOGGER.info("requested " + wowItems.size() + " items in " + duration + "ms");
 
         return wowItems;
     }
 
-    private WowItem requestWowItemFromWowAuctionPage(long itemId) {
+    public WowItem requestWowItemFromWowAuctionPage(long itemId) {
         try {
-            System.out.println("TSMCoreService.requestPriceFromSite - requesting itemId " + itemId);
+            LOGGER.info("TSMCoreService.requestPriceFromSite - requesting itemId " + itemId);
             long start = System.currentTimeMillis();
             Document doc = Jsoup.connect(WOW_AUCTION_URL + itemId).get();
             long stop = System.currentTimeMillis();
-            System.out.println("TSMCoreService.requestPriceFromSite - requested itemId " + itemId + " in " + (stop - start) + "ms");
+            LOGGER.info("TSMCoreService.requestPriceFromSite - requested itemId " + itemId + " in " + (stop - start) + "ms");
 
             String itemName = getItemNameFromSite(doc);
             Integer medianMarketPrice = getPriceFromSite(doc);
@@ -51,7 +56,7 @@ public class TSMCoreService {
                 return new WowItem(itemId, itemName, medianMarketPrice, estimatedSoldPerDay);
             }
         } catch (IOException e) {
-            System.out.println("error on requesting price for item " + itemId + ", reason: " + e.getMessage());
+            LOGGER.info("error on requesting price for item " + itemId + ", reason: " + e.getMessage());
         }
 
         return new WowItem(itemId, "error on requesting item");
@@ -95,7 +100,7 @@ public class TSMCoreService {
                 TSMPriceCategory priceCategory = Arrays.asList(TSMPriceCategory.values()).stream()
                         .filter(category -> category.liesInCategory(marketPrice))
                         .findAny()
-                        .orElse(null);
+                        .get();
                 addItemToMap(priceCategoryMap, wowItem, priceCategory);
             }
         });
@@ -105,7 +110,7 @@ public class TSMCoreService {
 
     private void addItemToMap(Map<TSMPriceCategory, List<WowItem>> priceCategoryMap, WowItem wowItem, TSMPriceCategory priceCategory) {
         if (priceCategory == null) {
-            System.out.println("couldn't find price category for itemId " + wowItem + ", price: " + wowItem.getMedianMarketPrice());
+            LOGGER.info("couldn't find price category for itemId " + wowItem + ", price: " + wowItem.getMedianMarketPrice());
         } else {
             if (!priceCategoryMap.containsKey(priceCategory)) {
                 priceCategoryMap.put(priceCategory, new ArrayList<>());

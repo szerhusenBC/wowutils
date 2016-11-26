@@ -1,5 +1,8 @@
 package org.zerhusen.wow.tsm;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.zerhusen.wow.tsm.cache.WowItemCache;
 import org.zerhusen.wow.tsm.service.TSMCoreService;
 import org.zerhusen.wow.tsm.service.TSMPriceCategory;
 import org.zerhusen.wow.tsm.service.WowItem;
@@ -15,34 +18,44 @@ import java.util.stream.Collectors;
  */
 public class Application {
 
+    private static final Logger LOGGER = LogManager.getLogger(Application.class);
+
     private static final String SEPERATOR = ",";
 
     public static void main(String[] args) {
         if (args == null || args.length == 0) {
-            System.out.println("please specify path to file with TSM import string!");
+            LOGGER.info("please specify path to file with TSM import string!");
         } else {
             String tsmString = readStringFromFile(args[0]);
 
             if (tsmString == null || "".equals(tsmString)) {
-                System.out.println("couldn't find TSM string in first line of file!");
+                LOGGER.info("couldn't find TSM string in first line of file!");
             } else {
                 List<Long> itemIds = SimpleTsmParser.extractItemIds(tsmString);
 
-                TSMCoreService tsmCoreService = new TSMCoreService();
-                List<WowItem> wowItems = tsmCoreService.requestWowItems(itemIds);
-                Map<TSMPriceCategory, List<WowItem>> categoryPriceMap = tsmCoreService.getCategoryPriceMap(wowItems);
-
                 final String rootPath = initRootPath();
+
+                final WowItemCache itemCache = new WowItemCache();
+                itemCache.loadCacheFromFile(rootPath);
+
+                List<WowItem> wowItems = itemIds.stream()
+                        .map(itemId -> itemCache.getWowItem(itemId))
+                        .collect(Collectors.toList());
+
+                itemCache.storeCacheInFile(rootPath);
+
+                Map<TSMPriceCategory, List<WowItem>> categoryPriceMap = new TSMCoreService().getCategoryPriceMap(wowItems);
+
                 try {
                     generateItemListCSVFile(rootPath, categoryPriceMap);
                 } catch (IOException e) {
-                    System.out.println("couldn't write item list file, reason: " + e.getMessage());
+                    LOGGER.info("couldn't write item list file, reason: " + e.getMessage());
                 }
 
                 try {
                     generateTsmImportStringFile(rootPath, categoryPriceMap);
                 } catch (IOException e) {
-                    System.out.println("couldn't write TSM import string file, reason: " + e.getMessage());
+                    LOGGER.info("couldn't write TSM import string file, reason: " + e.getMessage());
                 }
             }
         }

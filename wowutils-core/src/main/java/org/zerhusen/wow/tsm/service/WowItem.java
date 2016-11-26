@@ -1,11 +1,16 @@
 package org.zerhusen.wow.tsm.service;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
  * Created by stephan on 19.11.16.
  */
-public class WowItem {
+public class WowItem implements Serializable {
+
     private final long itemId;
     private final String name;
     private Integer medianMarketPrice;
@@ -16,7 +21,13 @@ public class WowItem {
         this.name = name;
     }
 
-    public WowItem(long itemId, String name, int medianMarketPrice, double estimatedSoldPerDay) {
+    @JsonCreator
+    public WowItem(
+            @JsonProperty("itemId") long itemId,
+            @JsonProperty("name") String name,
+            @JsonProperty("medianMarketPrice") int medianMarketPrice,
+            @JsonProperty("estimatedSoldPerDay") double estimatedSoldPerDay
+    ) {
         this.itemId = itemId;
         this.name = name;
         this.medianMarketPrice = medianMarketPrice;

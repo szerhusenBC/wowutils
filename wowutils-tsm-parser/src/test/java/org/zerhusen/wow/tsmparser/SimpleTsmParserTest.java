@@ -1,5 +1,7 @@
 package org.zerhusen.wow.tsmparser;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 import java.io.BufferedReader;
@@ -15,6 +17,8 @@ import static org.junit.Assert.*;
  */
 public class SimpleTsmParserTest {
 
+    private static final Logger LOGGER = LogManager.getLogger(SimpleTsmParserTest.class);
+
     @Test
     public void extractItemIdsAgainstPhatLewtsTransmogImportString() throws Exception {
         InputStream resourceAsStream = SimpleTsmParserTest.class.getResourceAsStream("/phats_transmog_list.txt");
@@ -22,7 +26,7 @@ public class SimpleTsmParserTest {
             String tsmString = br.readLine();
             List<Long> itemIds = SimpleTsmParser.extractItemIds(tsmString);
             assertThat(itemIds).hasSize(3056);
-            System.out.println(itemIds.size() + " itemIds extracted");
+            LOGGER.info(itemIds.size() + " itemIds extracted");
         }
     }
 
