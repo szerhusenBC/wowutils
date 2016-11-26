@@ -1,7 +1,9 @@
 package org.zerhusen.wow.tsmparser;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,8 +17,8 @@ public final class SimpleTsmParser {
     private SimpleTsmParser() {
     }
 
-    public static List<Long> extractItemIds(String tsmString) {
-        List<Long> itemIds = new ArrayList<>();
+    public static Set<Long> extractItemIds(String tsmString) {
+        Set<Long> itemIds = new HashSet<>();
         Matcher matcher = PATTERN.matcher(tsmString);
 
         while (matcher.find()) {

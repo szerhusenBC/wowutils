@@ -8,6 +8,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
@@ -24,7 +25,7 @@ public class SimpleTsmParserTest {
         InputStream resourceAsStream = SimpleTsmParserTest.class.getResourceAsStream("/phats_transmog_list.txt");
         try (BufferedReader br = new BufferedReader(new InputStreamReader(resourceAsStream))) {
             String tsmString = br.readLine();
-            List<Long> itemIds = SimpleTsmParser.extractItemIds(tsmString);
+            Set<Long> itemIds = SimpleTsmParser.extractItemIds(tsmString);
             assertThat(itemIds).hasSize(3056);
             LOGGER.info(itemIds.size() + " itemIds extracted");
         }

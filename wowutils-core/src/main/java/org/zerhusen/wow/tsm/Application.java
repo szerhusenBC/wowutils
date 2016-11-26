@@ -13,6 +13,7 @@ import org.zerhusen.wow.tsmparser.SimpleTsmParser;
 import java.io.*;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -31,7 +32,7 @@ public class Application {
             if (tsmString == null || "".equals(tsmString)) {
                 LOGGER.info("couldn't find TSM string in first line of file!");
             } else {
-                List<Long> itemIds = SimpleTsmParser.extractItemIds(tsmString);
+                Set<Long> itemIds = SimpleTsmParser.extractItemIds(tsmString);
 
                 final String rootPath = initRootPath();
 
@@ -44,7 +45,7 @@ public class Application {
         }
     }
 
-    private static List<WowItem> getWowItems(List<Long> itemIds, String rootPath) {
+    private static List<WowItem> getWowItems(Set<Long> itemIds, String rootPath) {
         final WowItemCache itemCache = new WowItemCache();
         itemCache.loadCacheFromFile(rootPath);
 
