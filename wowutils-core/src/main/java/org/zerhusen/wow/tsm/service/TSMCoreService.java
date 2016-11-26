@@ -47,7 +47,7 @@ public class TSMCoreService {
             long stop = System.currentTimeMillis();
             LOGGER.info("TSMCoreService.requestPriceFromSite - requested itemId " + itemId + " in " + (stop - start) + "ms");
 
-            String itemName = getItemNameFromSite(doc);
+            String itemName = getItemNameFromSite(doc).replace(",", " ");
             Integer medianMarketPrice = getPriceFromSite(doc);
             if (medianMarketPrice == null) {
                 return new WowItem(itemId, itemName);
